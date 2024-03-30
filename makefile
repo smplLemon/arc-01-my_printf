@@ -1,20 +1,23 @@
-TARGET = my_printf
-SRC = my_printf.c
-OBJ = $(SRC:.c=.o)
+CC = gcc
+
 CFLAGS = -Wall -Wextra -Werror
+
+SRC = my_mastermind.c
+OBJ = $(SRC:.c=.o)
+TARGET = my_mastermind
 
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	@gcc $(CFLAGS) -o $(TARGET) $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ)
 
 $(OBJ): $(SRC)
-	@gcc $(CFLAGS) -c $(SRC)
+	$(CC) $(CFLAGS) -c $(SRC)
 
 clean:
-	@rm -f *.o
+	rm -f *.o
 
 fclean: clean
-	@rm -f $(TARGET)
+	rm -f $(TARGET)
 
 re: fclean all

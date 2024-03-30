@@ -1,174 +1,177 @@
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <stddef.h>
+#include <stdarg.h>
+#include <string.h>
 
-int my_putchar(char c) {
-  write(1, &c, 1);
-  return 1;
-}
+char *convert_to_base(long long numbers, char *base_characters, int base);
+int print_characters(const char  *text);
+int print_number_with_sign(int number);
+int print_unsigned_number(unsigned int number);
 
-int my_putstr(const char *str) {
-  int count = 0;
-  while (*str != '\0') {
-    write(1, str++, 1);
-    count++;
-  }
-  return count;
-}
+char *convert_to_base(long long number, char *base_characters, int base) {
+    int result_length = 0;
+    long long num_copy = number;
 
-void reverse(char str[], int length) {
-  int start = 0;
-  int end = length - 1;
-  while (start < end) {
-    char temp = str[start];
-    str[start] = str[end];
-    str[end] = temp;
-    start++;
-    end--;
-  }
-}
+    while (num_copy > 0) {
+        result_length++;
+        num_copy /= base;
+    }
 
-char *my_itoa(size_t num, size_t base) {
-  size_t isNegative = 0;
-  size_t length = 1;
+    char *result = (char *)malloc(sizeof(char) * (result_length + 1));
+    result[result_length] = '\0';
 
-  if (num == 0) {
-    char *result = (char *)malloc(2);
-    result[0] = '0';
-    result[1] = '\0';
+    while (number > 0) {
+        result_length--;
+        result[result_length] = base_characters[number % base];
+        number /= base;
+    }
+
     return result;
-  }
-
-  if (num < 0 && base != 10) {
-    isNegative = 1;
-    num = -num;
-  }
-
-  int temp = num;
-  while (temp != 0) {
-    temp /= base;
-    length++;
-  }
-
-  char *result = (char *)malloc(length + isNegative + 1);
-
-  int i = 0;
-  while (num != 0) {
-    int remainder = num % base;
-    result[i++] = (remainder > 9) ? (remainder - 10) + 'a' : remainder + '0';
-    num /= base;
-  }
-
-  if (isNegative && base == 10) {
-    result[i++] = '-';
-  }
-
-  result[i] = '\0';
-
-  reverse(result, i);
-
-  return result;
 }
 
-int my_handle_octal(va_list ap) {
-  unsigned int octal_num = va_arg(ap, unsigned int);
-  char *buffer = my_itoa(octal_num, 8);
-  int count = my_putstr(buffer);
-  free(buffer);
-  return count;
+int print_characters(const char *text) {
+    int character_count = 0;
+
+    for (int index = 0; text[index] != '\0'; index++) {
+        putchar(text[index]);
+        character_count++;
+    }
+
+    return character_count;
 }
 
-int my_handle_hexadecimal(va_list ap) {
-  unsigned int hex_num = va_arg(ap, unsigned int);
-  char *buffer = my_itoa(hex_num, 16);
-  int count = my_putstr(buffer);
-  free(buffer);
-  return count;
+int print_number_with_sign(int number) {
+    int printed_characters = 0;
+
+    if (number == 0) {
+        putchar('0');
+        printed_characters++;
+        return printed_characters;
+    }
+
+    number = (number < 0) ? (putchar('-'), printed_characters++, -number) : number;
+
+    int divisor = 1;
+
+    while (number / divisor >= 10) {
+        divisor *= 10;
+    }
+
+    for (; divisor > 0; divisor /= 10) {
+        int digit = number / divisor;
+        putchar(digit + '0');
+        printed_characters++;
+        number %= divisor;
+    }
+
+    return printed_characters;
 }
 
-int my_handle_pointer(va_list ap) {
-  size_t ptr = va_arg(ap, size_t);
-  char * buffer = my_itoa((size_t)ptr, 16);
-  // if windows 
-  int count = my_putstr("0000");
-  // if mac os
-  // int count = my_putstr("0x");
-  count += my_putstr(buffer);
-  free(buffer);
-  return count;
+int print_unsigned_number(unsigned int number) {
+    if (number == 0) {
+        putchar('0');
+        return 1;
+    }
+
+    int digit_count = 0;
+
+    unsigned int temp = number;
+    while (temp > 0) {
+        temp /= 10;
+        digit_count++;
+    }
+
+    char digit_buffer[20];
+
+    for (int i = digit_count - 1; i >= 0; i--) {
+        digit_buffer[i] = (number % 10) + '0';
+        number /= 10;
+    }
+
+    for (int j = 0; j < digit_count; j++) {
+        putchar(digit_buffer[j]);
+    }
+
+    return digit_count;
 }
 
+int print_number(int num) {
+    return print_number_with_sign(num);
+}
 
-int my_handle_(va_list ap) {
-  int _num = va_arg(ap, int);
-  char *buffer = my_itoa(_num, 10);
-  int count;
-  if (_num < 0) {
-    count = my_putchar('-');
-    count += my_putstr(buffer + 1);
-  } else {
-    count = my_putstr(buffer);
-  }
-  free(buffer);
-  return count;
+int print_octal(long long num) {
+    char *base = "01234567";
+    char *oct = convert_to_base(num, base, 8);
+    return print_characters(oct);
+}
+
+int print_unsigned(unsigned int num) {
+    return print_unsigned_number(num);
+}
+
+int print_char(int ch) {
+    putchar(ch);
+    return 1;
+}
+
+int print_string(const char *str) {
+    if (str == NULL) {
+        str = "(null)";
+    }
+    return print_characters(str);
+}
+
+int print_pointer(void *ptr) {
+    int count = 0;
+    count += print_characters("0x");
+    count += print_characters(convert_to_base((long long)ptr, "0123456789abcdef", 16));
+    return count;
 }
 
 int my_printf(const char *format, ...) {
-  int i = 0, counter = 0;
-  va_list ap;
-  va_start(ap, format);
+    int printed_characters = 0;
+    va_list args;
+    va_start(args, format);
 
-  while (format[i]) {
-    if (format[i] == '%') {
-      i++;
-      if (format[i] == 'c') {
-        counter += my_putchar(va_arg(ap, int));
-      } else if (format[i] == 'd' || format[i] == 'u') {
-        counter += my_handle_(ap);
-      } else if (format[i] == 's') {
-        char *s = va_arg(ap, char *);
-        if (s != NULL) {
-          counter += my_putstr(s);
+    while (*format) {
+        if (*format != '%') {
+            putchar(*format);
+            printed_characters++;
+        } else {
+            format++;
+            switch (*format) {
+                case 'd':
+                case 'i':
+                    printed_characters += print_number(va_arg(args, int));
+                    break;
+                case 'o':
+                    printed_characters += print_octal(va_arg(args, long long));
+                    break;
+                case 'u':
+                    printed_characters += print_unsigned(va_arg(args, unsigned int));
+                    break;
+                case 'c':
+                    printed_characters += print_char(va_arg(args, int));
+                    break;
+                case 's':
+                    printed_characters += print_string(va_arg(args, char *));
+                    break;
+                case 'p':
+                    printed_characters += print_pointer(va_arg(args, void *));
+                    break;
+                case 'x':
+                    printed_characters += print_characters(convert_to_base(va_arg(args, int), "0123456789ABCDEF", 16));
+                    break;
+                default:
+                    putchar('%');
+                    putchar(*format);
+                    printed_characters += 2;
+                    break;
+            }
         }
-      } else if (format[i] == 'o') {
-        counter += my_handle_octal(ap);
-      } else if (format[i] == 'x') {
-        counter += my_handle_hexadecimal(ap);
-      } else if (format[i] == 'p') {
-        counter += my_handle_pointer(ap);
-      }
-    } else {
-      counter  += my_putchar(format[i]);
+        format++;
     }
-    i++;
-  }
 
-  va_end(ap);
-  return counter;
-}
-
-int main() {
-  my_printf("\t-s-\t\n");
-  my_printf("Hello, %s!\n", "world");
-  printf("Hello, %s!\n", "world");
-  my_printf("\t-d-\t\n");
-  my_printf("The answer is %d.\n", 991);
-  printf("The answer is %d.\n", 991);
-  my_printf("\t-o-\t\n");
-  my_printf("Octal value: %o\n", 991);
-  printf("Octal value: %o\n", 991);
-  my_printf("\t-u-\t\n");
-  my_printf("Unsigned decimal: %u\n", 991);
-  printf("Unsigned decimal: %u\n", 991);
-  my_printf("\t-x-\t\n");
-  my_printf("Hexadecimal: %x\n", 991);
-  printf("Hexadecimal: %x\n", 991);
-  my_printf("\t-p-\t\n");
-  my_printf("Address: %p\n", (void *)main);
-  printf("Address: %p\n", (void *)main);
-  my_printf("\t-c-\t\n");
-  my_printf("Character: %c\n", 'A');
-  printf("Character: %c\n", 'A');
+    va_end(args);
+    return printed_characters;
 }
