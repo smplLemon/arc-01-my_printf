@@ -28,4 +28,5 @@ Include another .c is forbidden
 Macros with logic (while/if/variables/...) are forbidden
 
 # Install & Usage
+make
 gcc my_printf.c
