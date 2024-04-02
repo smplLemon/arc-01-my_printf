@@ -2,9 +2,9 @@ CC = gcc
 
 CFLAGS = -Wall -Wextra -Werror
 
-SRC = my_mastermind.c
+SRC = my_printf.c
 OBJ = $(SRC:.c=.o)
-TARGET = my_mastermind
+TARGET = my_printf
 
 all: $(TARGET)
 
